@@ -1,2 +1,0 @@
-NombreUsuario: Laura Oviedo
-CorreoElectronico: prod.laura.oviedo@gmail.com
