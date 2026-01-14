@@ -4,46 +4,52 @@
     Author     : USUARIO
 --%>
 
-<%@page import="java.sql.ResultSet"%>
+<%@page import="java.util.List"%>
+<%@page import="com.coffee.model.Cliente"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Coffee Ann - Listado</title>
-        <style>
-            table {
-                width: 50%;
-                border-collapse: collapse;
-            }
-            th, td {
-                border: 1px solid black;
-                padding: 8px;
-                text-align: left;
-            }
-        </style>
-    </head>
-    <body>
-        <h2>Lista de Clientes Registrados</h2>
-        <table>
+<head>
+    <title>Lista de Clientes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Clientes Registrados</h2>
+        <a href="index.jsp" class="btn btn-primary">+ Nuevo Cliente</a>
+    </div>
+    <table class="table table-hover border shadow-sm">
+        <thead class="table-dark">
             <tr>
                 <th>ID</th>
+                <th>Identificación</th>
                 <th>Nombre</th>
+                <th>Ciudad</th>
+                <th>Teléfono</th>
                 <th>Email</th>
             </tr>
-            <%
-                // Obtenemos el ResultSet que envió el Servlet
-                ResultSet rs = (ResultSet) request.getAttribute("resultadoSQL");
-                while (rs != null && rs.next()) {
+        </thead>
+        <tbody>
+            <% 
+                List<Cliente> lista = (List<Cliente>) request.getAttribute("misClientes");
+                if (lista != null && !lista.isEmpty()) {
+                    for (Cliente c : lista) {
             %>
             <tr>
-                <td><%= rs.getInt("id_cliente")%></td>
-                <td><%= rs.getString("nombres")%></td>
-                <td><%= rs.getString("email")%></td
-                <td><%= rs.getString("direccion")%></td>
+                <td><%= c.getId() %></td>
+                <td><%= c.getIdentificacion() %></td>
+                <td><%= c.getNombres() %></td>
+                <td><%= c.getCiudad() %></td>
+                <td><%= c.getTelefono() %></td>
+                <td><%= c.getEmail() %></td>
             </tr>
-            <% }%>
-        </table>
-        <br>
-        <a href="index.jsp">Volver al Formulario</a>
-    </body>
+            <% 
+                    }
+                } else {
+            %>
+            <tr><td colspan="6" class="text-center">No hay clientes registrados.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+</body>
 </html>
