@@ -7,30 +7,53 @@ package com.coffee.controller;
 import com.coffee.dao.ClienteDAO;
 import com.coffee.model.Cliente;
 import java.io.IOException;
+import java.util.List; // ESTE ES EL IMPORT QUE TE FALTA
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
+import com.google.gson.Gson;
 
-/**
- * Servlet que actúa como controlador del flujo web.
- */
 @WebServlet("/ClienteServlet")
 public class ClienteServlet extends HttpServlet {
 
     private ClienteDAO dao = new ClienteDAO();
+    private Gson gson = new Gson();
+
+    @Override
+    protected void doOptions(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Esto le dice al navegador que el Servlet acepta conexiones desde afuera
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        response.setStatus(HttpServletResponse.SC_OK);
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Obtiene la lista y la envía a la vista JSP
-        request.setAttribute("misClientes", dao.listar());
-        request.getRequestDispatcher("listaClientes.jsp").forward(request, response);
+
+        // Permite que React se conecte
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        // Obtiene la lista y la convierte a JSON
+        List<Cliente> lista = dao.listar();
+        String jsonResultado = this.gson.toJson(lista);
+
+        response.getWriter().write(jsonResultado);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Captura de parámetros desde el formulario
+
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setCharacterEncoding("UTF-8");
+
+        // Captura de parámetros (Asegúrate que estos nombres coincidan con tu modelo)
         String iden = request.getParameter("identificacion");
         String nom = request.getParameter("nombres");
         String mail = request.getParameter("email");
@@ -38,11 +61,20 @@ public class ClienteServlet extends HttpServlet {
         String ciu = request.getParameter("ciudad");
         String tel = request.getParameter("telefono");
 
-        // Creación del objeto y persistencia
-        Cliente nuevoCliente = new Cliente(iden, nom, mail, dir, ciu, tel);
-        dao.insertar(nuevoCliente);
+        if (iden != null && nom != null) {
+            Cliente nuevo = new Cliente(iden, nom, mail, dir, ciu, tel);
+            dao.insertar(nuevo);
+            response.setStatus(HttpServletResponse.SC_CREATED);
+            response.getWriter().write("{\"mensaje\": \"Cliente guardado\"}");
+        }
+    }
 
-        // Redirección para evitar duplicidad de datos al refrescar
-        response.sendRedirect("ClienteServlet");
+    @Override
+    public void destroy() {
+        try {
+            com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
