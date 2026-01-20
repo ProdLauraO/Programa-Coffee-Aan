@@ -7,7 +7,7 @@ package com.coffee.controller;
 import com.coffee.dao.ClienteDAO;
 import com.coffee.model.Cliente;
 import java.io.IOException;
-import java.util.List; // ESTE ES EL IMPORT QUE TE FALTA
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -47,27 +47,38 @@ public class ClienteServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setCharacterEncoding("UTF-8");
-
-        // Captura de parámetros (Asegúrate que estos nombres coincidan con tu modelo)
-        String iden = request.getParameter("identificacion");
-        String nom = request.getParameter("nombres");
-        String mail = request.getParameter("email");
-        String dir = request.getParameter("direccion");
-        String ciu = request.getParameter("ciudad");
-        String tel = request.getParameter("telefono");
-
-        if (iden != null && nom != null) {
-            Cliente nuevo = new Cliente(iden, nom, mail, dir, ciu, tel);
-            dao.insertar(nuevo);
+protected void doPost(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setCharacterEncoding("UTF-8");
+    String action = request.getParameter("action");
+    String idString = request.getParameter("id");
+    // Lógica para ELIMINAR
+    if ("delete".equals(action) && idString != null) {
+        dao.eliminar(Integer.parseInt(idString));
+        response.getWriter().write("{\"mensaje\": \"Cliente eliminado\"}");
+        return;
+    }
+    // Parámetros para GUARDAR/ACTUALIZAR
+    String iden = request.getParameter("identificacion");
+    String nom = request.getParameter("nombres");
+    String mail = request.getParameter("email");
+    String dir = request.getParameter("direccion");
+    String ciu = request.getParameter("ciudad");
+    String tel = request.getParameter("telefono");
+    if (iden != null && nom != null) {
+        Cliente c = new Cliente(iden, nom, mail, dir, ciu, tel);
+        if (idString != null && !idString.isEmpty() && !idString.equals("0")) {
+            c.setId(Integer.parseInt(idString));
+            dao.actualizar(c); 
+            response.getWriter().write("{\"mensaje\": \"Cliente actualizado\"}");
+        } else {
+            dao.insertar(c);
             response.setStatus(HttpServletResponse.SC_CREATED);
             response.getWriter().write("{\"mensaje\": \"Cliente guardado\"}");
         }
     }
+}
 
     @Override
     public void destroy() {
